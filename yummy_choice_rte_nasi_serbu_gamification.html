@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gamifikasi Yummy Choice RTE Nasi Serbu x Mice</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Space Grotesk Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+            background-color: #F4F0EA;
+            background-image: radial-gradient(#000000 1.2px, transparent 1.2px);
+            background-size: 18px 18px;
+            color: #000000;
+        }
+
+        /* Neo-Brutalism Core Utilities */
+        .neo-box {
+            border: 3px solid #000000;
+            box-shadow: 4px 4px 0px #000000;
+        }
+        
+        .neo-box-lg {
+            border: 4px solid #000000;
+            box-shadow: 6px 6px 0px #000000;
+        }
+
+        .neo-btn {
+            border: 3px solid #000000;
+            box-shadow: 4px 4px 0px #000000;
+            transition: all 0.1s ease-in-out;
+            user-select: none;
+        }
+
+        .neo-btn:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px #000000;
+        }
+
+        .neo-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px #000000;
+        }
+
+        .drop-slot {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 140px;
+            min-height: 42px;
+            padding: 4px 10px;
+            margin: 2px 4px;
+            border: 2px dashed #000000;
+            background-color: rgba(255, 255, 255, 0.85);
+            border-radius: 8px;
+            vertical-align: middle;
+            transition: all 0.2s ease;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .drop-slot.drag-over {
+            background-color: #00F5D4;
+            border-style: solid;
+            transform: scale(1.03);
+        }
+
+        .drop-slot.filled {
+            border-style: solid;
+            background-color: #FFE600;
+            box-shadow: 3px 3px 0px #000000;
+        }
+
+        .drop-slot.selected-target {
+            animation: pulse-border 1s infinite alternate;
+            background-color: #FF007F;
+            color: #FFFFFF;
+        }
+
+        @keyframes pulse-border {
+            0% { border-color: #000000; box-shadow: 0 0 0px #000; }
+            100% { border-color: #000000; box-shadow: 0 0 10px #FF007F; }
+        }
+
+        .word-pill {
+            display: inline-block;
+            padding: 8px 14px;
+            margin: 4px;
+            border: 2px solid #000000;
+            border-radius: 10px;
+            background-color: #FFFFFF;
+            font-weight: 700;
+            cursor: grab;
+            user-select: none;
+            box-shadow: 3px 3px 0px #000000;
+            transition: transform 0.15s ease, background-color 0.15s ease;
+        }
+
+        .word-pill:active {
+            cursor: grabbing;
+        }
+
+        .word-pill.selected-pill {
+            background-color: #7B2CBF;
+            color: #FFFFFF;
+            transform: scale(1.05);
+            box-shadow: 5px 5px 0px #000000;
+        }
+
+        .word-pill.used {
+            opacity: 0.35;
+            cursor: not-allowed;
+            box-shadow: none;
+            text-decoration: line-through;
+        }
+
+        /* Soundwave Mute Toggle Visual */
+        .sound-wave-bar {
+            display: inline-block;
+            width: 3px;
+            height: 12px;
+            background-color: #000000;
+            margin: 0 1px;
+            animation: wave 1s infinite ease-in-out;
+        }
+
+        .sound-wave-bar:nth-child(2) { animation-delay: 0.2s; }
+        .sound-wave-bar:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes wave {
+            0%, 100% { height: 6px; }
+            50% { height: 16px; }
+        }
+
+        .muted .sound-wave-bar {
+            animation: none;
+            height: 4px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between p-3 sm:p-6 md:p-8">
+
+    <header class="max-w-5xl mx-auto w-full mb-4">
+        <div class="neo-box bg-[#00F5D4] p-3 sm:p-4 rounded-xl flex items-center justify-between flex-wrap gap-2">
+            <div class="flex items-center gap-3">
+                <span class="text-2xl sm:text-3xl">🍱</span>
+                <div>
+                    <h1 class="font-black text-lg sm:text-2xl tracking-tight leading-none uppercase">YUMMY CHOICE RTE</h1>
+                    <p class="font-bold text-xs sm:text-sm text-black/80">SOP Pengolahan & Penawaran Nasi Serbu x Mice</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button id="bgmToggleBtn" onclick="toggleAudio()" class="neo-btn bg-[#FFE600] px-3 py-1.5 rounded-lg text-xs sm:text-sm font-black flex items-center gap-2">
+                    <span id="bgmIcon">🎵</span>
+                    <span id="bgmText">BGM: ON</span>
+                    <div id="soundWave" class="flex items-end h-4 ml-1">
+                        <span class="sound-wave-bar"></span>
+                        <span class="sound-wave-bar"></span>
+                        <span class="sound-wave-bar"></span>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto w-full flex-1">
+
+        <!-- ==================== SCREEN 1: GATEWAY & MISSION BRIEFING ==================== -->
+        <section id="gatewayScreen" class="neo-box-lg bg-white p-5 sm:p-8 rounded-2xl mb-6">
+            <div class="max-w-2xl mx-auto space-y-6">
+                <!-- Header Badge -->
+                <div class="text-center space-y-2">
+                    <span class="inline-block neo-box bg-[#FF007F] text-white px-4 py-1 text-xs sm:text-sm font-black tracking-widest uppercase rounded-full">
+                        ⚡ MISSION MASTER CREW 2026
+                    </span>
+                    <h2 class="text-2xl sm:text-4xl font-black uppercase tracking-tight">SIAP MENGUASAI SOP NASI SERBU?</h2>
+                </div>
+
+                <!-- Storytelling Hook (WHY) -->
+                <div class="neo-box bg-[#FFE600] p-4 sm:p-5 rounded-xl space-y-2">
+                    <div class="flex items-center gap-2 font-black text-sm sm:text-base">
+                        <span class="text-xl">🔥</span> HOOK TANTANGAN:
+                    </div>
+                    <p class="text-sm sm:text-base font-bold leading-relaxed">
+                        "Pelanggan lapar antre di kasir! Apakah kamu punya refleks dan pemahaman SOP tingkat tinggi untuk memanaskan dan menawarkan <span class="underline underline-offset-4 decoration-2">Nasi Serbu x Mice</span> dengan cepat, akurat, dan ramah tanpa merusak kualitas produk?"
+                    </p>
+                </div>
+
+                <!-- Form Inputs (Nama & No HP) -->
+                <div class="neo-box bg-[#F4F0EA] p-5 rounded-xl space-y-4">
+                    <h3 class="font-black text-base uppercase flex items-center gap-2">
+                        <span>👤</span> Identitas Peserta Gamifikasi
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block font-bold text-xs sm:text-sm mb-1 uppercase">Nama Lengkap *</label>
+                            <input type="text" id="playerNameInput" placeholder="Masukkan nama kamu..." 
+                                class="w-full neo-box p-3 rounded-lg font-bold text-sm focus:bg-[#00F5D4] focus:outline-none transition">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-xs sm:text-sm mb-1 uppercase">No HP (Nomor Handphone) *</label>
+                            <input type="tel" id="playerPhoneInput" placeholder="Contoh: 081234567890" 
+                                class="w-full neo-box p-3 rounded-lg font-bold text-sm focus:bg-[#00F5D4] focus:outline-none transition">
+                        </div>
+                    </div>
+                    <p id="formErrorMsg" class="text-red-600 font-bold text-xs hidden">⚠️ Harap isi Nama dan No HP terlebih dahulu sebelum memulai mission!</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs sm:text-sm">
+                    <div class="neo-box bg-[#7B2CBF] text-white p-4 rounded-xl space-y-2">
+                        <h4 class="font-black uppercase text-yellow-300 flex items-center gap-1">
+                            🎯 Mission Objectives
+                        </h4>
+                        <ul class="list-disc list-inside space-y-1 font-bold">
+                            <li>Lengkapi 10 instruksi SOP yang hilang.</li>
+                            <li>Pahami parameter daya, durasi, dan porsi tester.</li>
+                            <li>Kuasai urutan penawaran standar kasir.</li>
+                        </ul>
+                    </div>
+                    <div class="neo-box bg-[#00F5D4] text-black p-4 rounded-xl space-y-2">
+                        <h4 class="font-black uppercase flex items-center gap-1">
+                            🎮 Cara Bermain
+                        </h4>
+                        <ul class="list-disc list-inside space-y-1 font-bold">
+                            <li><b>Desktop:</b> Drag & drop kata ke slot kosong.</li>
+                            <li><b>HP / Touch:</b> Tap kata pilihan, lalu tap slot tujuan!</li>
+                            <li>Capai skor minimal <b>80%</b> untuk lulus.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Ready CTA Button -->
+                <div class="text-center pt-2">
+                    <button onclick="startMission()" class="neo-btn bg-[#FF007F] hover:bg-[#ff3399] text-white font-black text-base sm:text-lg px-8 py-4 rounded-xl w-full sm:w-auto uppercase tracking-wider">
+                        🚀 MULAI MISSION MASTER CREW
+                    </button>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ==================== SCREEN 2: GAMEPLAY CORE EXECUTION ==================== -->
+        <section id="gameplayScreen" class="hidden space-y-6">
+            
+            <!-- Dashboard HUD (Score, Progress, Player Info, Badges) -->
+            <div class="neo-box bg-white p-4 sm:p-5 rounded-2xl space-y-4">
+                <div class="flex flex-wrap justify-between items-center gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="neo-box bg-[#7B2CBF] text-white font-black px-3 py-1.5 rounded-lg text-xs sm:text-sm">
+                            👤 <span id="hudPlayerName">Nama</span> (<span id="hudPlayerPhone">No HP</span>)
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="neo-box bg-[#FFE600] font-black px-3 py-1.5 rounded-lg text-xs sm:text-sm">
+                            ⭐ SKOR: <span id="hudScore">0</span> / 100
+                        </div>
+                        <button onclick="showHint()" class="neo-btn bg-[#00F5D4] font-black px-3 py-1.5 rounded-lg text-xs sm:text-sm flex items-center gap-1">
+                            💡 HINT
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div>
+                    <div class="flex justify-between font-black text-xs uppercase mb-1">
+                        <span>Progress Kelengkapan SOP</span>
+                        <span id="progressPercent">0%</span>
+                    </div>
+                    <div class="w-full neo-box bg-[#F4F0EA] h-6 rounded-full overflow-hidden p-1">
+                        <div id="progressBarFill" class="bg-[#FF007F] h-full rounded-full transition-all duration-300 w-0"></div>
+                    </div>
+                </div>
+
+                <!-- Active Badges Ribbon -->
+                <div class="flex items-center gap-2 overflow-x-auto pb-1 pt-1 text-xs">
+                    <span class="font-black text-xs uppercase whitespace-nowrap">Lencana Terbuka:</span>
+                    <div id="badgesContainer" class="flex gap-2">
+                        <span class="text-xs text-gray-500 font-bold italic">Lengkapi slot untuk membuka badge...</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- Main SOP Interactive Paragraphs (2 cols on desktop) -->
+                <div class="lg:col-span-2 neo-box bg-white p-5 sm:p-6 rounded-2xl space-y-6 text-sm sm:text-base font-bold leading-relaxed">
+                    
+                    <div class="neo-box bg-[#FFE600] p-3 rounded-xl flex items-center justify-between">
+                        <span class="font-black uppercase text-xs sm:text-sm">📝 SOP Yummy Choice RTE Nasi Serbu x Mice</span>
+                        <span class="text-xs font-bold bg-white px-2 py-1 rounded neo-box">Isi 10 Slot Kosong</span>
+                    </div>
+
+                    <!-- Paragraph 1: Pengolahan Microwave -->
+                    <div class="neo-box bg-[#F4F0EA] p-4 rounded-xl space-y-2">
+                        <div class="font-black text-xs text-[#7B2CBF] uppercase tracking-wider">BAGIAN 1: PENGOLAHAN & PEMANASAN</div>
+                        <p>
+                            1. Sop pengolahan dan penyajikan Nasi Serbu x Mice, lepaskan tutup pada kemasan produk ketika hendak memanaskan produk, panaskan produk pada 
+                            <span class="drop-slot" data-slot="1" data-answer="Microwave">1. [ Drop / Tap ]</span> 
+                            dengan daya 
+                            <span class="drop-slot" data-slot="2" data-answer="800 watt">2. [ Drop / Tap ]</span>.
+                        </p>
+                    </div>
+
+                    <!-- Paragraph 2: Durasi Pemanasan -->
+                    <div class="neo-box bg-[#F4F0EA] p-4 rounded-xl space-y-2">
+                        <div class="font-black text-xs text-[#7B2CBF] uppercase tracking-wider">BAGIAN 2: DURASI PEMANASAN</div>
+                        <p>
+                            2. Panaskan selama 
+                            <span class="drop-slot" data-slot="3" data-answer="1 menit 40 detik">3. [ Drop / Tap ]</span> 
+                            untuk 1 pcs, apabila 2 pcs durasi pemanasan adalah 
+                            <span class="drop-slot" data-slot="4" data-answer="2 menit 40 detik">4. [ Drop / Tap ]</span>.
+                        </p>
+                    </div>
+
+                    <!-- Paragraph 3: Porsiasi Tester -->
+                    <div class="neo-box bg-[#F4F0EA] p-4 rounded-xl space-y-2">
+                        <div class="font-black text-xs text-[#7B2CBF] uppercase tracking-wider">BAGIAN 3: SAMPLING ICIP-ICIP</div>
+                        <p>
+                            3. Penawaran produk icip-icip Nasi Serbu x Mice dibagi 
+                            <span class="drop-slot" data-slot="5" data-answer="8 bagian">5. [ Drop / Tap ]</span> 
+                            kemudian masukan kedalam 
+                            <span class="drop-slot" data-slot="6" data-answer="cup icip-icip">6. [ Drop / Tap ]</span>.
+                        </p>
+                    </div>
+
+                    <!-- Paragraph 4: Alur Penawaran Pelanggan -->
+                    <div class="neo-box bg-[#F4F0EA] p-4 rounded-xl space-y-2">
+                        <div class="font-black text-xs text-[#7B2CBF] uppercase tracking-wider">BAGIAN 4: TATA CARA PENAWARAN DI KASIR</div>
+                        <p>
+                            4. Cara melakukan penawaran: 
+                            <span class="drop-slot" data-slot="7" data-answer="Salam pembuka">7. [ Drop / Tap ]</span>, 
+                            <span class="drop-slot" data-slot="8" data-answer="mohon maaf mengganggu waktunya">8. [ Drop / Tap ]</span>, 
+                            <span class="drop-slot" data-slot="9" data-answer="kenalkan & tawarkan produk serta variannya">9. [ Drop / Tap ]</span>, 
+                            <span class="drop-slot" data-slot="10" data-answer="tawarkan tester/icip-icip">10. [ Drop / Tap ]</span>, 
+                            informasi promo yang sedang berlangsung, arahkan pelanggan untuk transaksi di kasir, ucapkan terimakasi.
+                        </p>
+                    </div>
+
+                    <!-- Gameplay Control Buttons -->
+                    <div class="flex flex-wrap gap-3 pt-2">
+                        <button onclick="resetAllSlots()" class="neo-btn bg-gray-200 hover:bg-gray-300 px-4 py-3 rounded-xl font-black text-xs sm:text-sm">
+                            🔄 Reset Semua Slot
+                        </button>
+                        <button onclick="submitAnswers()" class="neo-btn bg-[#FF007F] hover:bg-[#ff1a8c] text-white px-6 py-3 rounded-xl font-black text-sm sm:text-base flex-1 uppercase tracking-wider">
+                            🚀 KIRIM JAWABAN & EVALUASI
+                        </button>
+                    </div>
+
+                </div>
+
+                <!-- Word Bank Container (1 col on desktop) -->
+                <div class="lg:col-span-1 space-y-4">
+                    <div class="neo-box bg-[#00F5D4] p-4 rounded-2xl space-y-3 sticky top-4">
+                        <div class="flex items-center justify-between border-b-2 border-black pb-2">
+                            <h3 class="font-black text-sm sm:text-base uppercase flex items-center gap-1">
+                                🔠 BANK KATA (PILIHAN)
+                            </h3>
+                            <span class="text-xs font-bold bg-white px-2 py-0.5 rounded neo-box">18 Pilihan</span>
+                        </div>
+                        <p class="text-xs font-bold leading-tight">
+                            💡 <b>Petunjuk Mobile:</b> Tap salah satu kata di bawah, lalu tap slot nomor tujuan di kiri/atas!
+                        </p>
+                        
+                        <!-- Word Pills Wrap -->
+                        <div id="wordBankContainer" class="flex flex-wrap gap-1.5 max-h-[500px] overflow-y-auto p-1">
+                            <!-- Injected dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+
+        <!-- ==================== SCREEN 3: POST-ACTION DEBRIEF (RESULTS) ==================== -->
+        <section id="debriefScreen" class="hidden neo-box-lg bg-white p-5 sm:p-8 rounded-2xl mb-6">
+            <div class="max-w-3xl mx-auto space-y-6">
+                
+                <!-- Result Banner -->
+                <div id="resultHeaderCard" class="neo-box p-6 rounded-2xl text-center space-y-3">
+                    <span id="resultBadge" class="inline-block neo-box px-4 py-1 font-black text-xs sm:text-sm uppercase rounded-full">
+                        EVALUASI AKHIR
+                    </span>
+                    <h2 id="resultTitle" class="text-2xl sm:text-4xl font-black uppercase">PERFORMA SANGAT BAIK!</h2>
+                    <p id="resultSubtitle" class="text-sm sm:text-base font-bold">Berikut detail capaian kamu dalam pemahaman SOP Yummy Choice RTE Nasi Serbu x Mice.</p>
+                </div>
+
+                <!-- Score & Stats Summary Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="neo-box bg-[#FFE600] p-4 rounded-xl text-center">
+                        <div class="font-black text-xs uppercase">Skor Akhir</div>
+                        <div class="font-black text-3xl sm:text-4xl my-1"><span id="finalScoreVal">0</span>/100</div>
+                        <div class="text-xs font-bold" id="accuracyText">Akurasi: 0%</div>
+                    </div>
+                    <div class="neo-box bg-[#00F5D4] p-4 rounded-xl text-center">
+                        <div class="font-black text-xs uppercase">Status Kelulusan</div>
+                        <div id="passStatusVal" class="font-black text-xl sm:text-2xl my-2">LULUS</div>
+                        <div class="text-xs font-bold">Target Min: 80%</div>
+                    </div>
+                    <div class="neo-box bg-[#7B2CBF] text-white p-4 rounded-xl text-center">
+                        <div class="font-black text-xs uppercase text-yellow-300">Lencana Diraih</div>
+                        <div id="finalBadgeCount" class="font-black text-3xl sm:text-4xl my-1">0</div>
+                        <div class="text-xs font-bold text-gray-200">Total 5 Badge</div>
+                    </div>
+                </div>
+
+                <!-- Positive Reinforcement Feedback Card -->
+                <div id="reinforcementCard" class="neo-box p-5 rounded-xl space-y-2">
+                    <div class="font-black text-sm uppercase flex items-center gap-2">
+                        <span>💬</span> FEEDBACK INSTRUKSIONAL:
+                    </div>
+                    <p id="reinforcementText" class="text-sm sm:text-base font-bold leading-relaxed">
+                        <!-- Injected dynamically -->
+                    </p>
+                </div>
+
+                <!-- Unlocked Badges Gallery -->
+                <div class="neo-box bg-[#F4F0EA] p-5 rounded-xl space-y-3">
+                    <h3 class="font-black text-sm uppercase">🏆 Koleksi Lencana Hasil Gamifikasi</h3>
+                    <div id="finalBadgesGallery" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                        <!-- Injected dynamically -->
+                    </div>
+                </div>
+
+                <!-- Itemized Answers Correction Breakdown -->
+                <div class="space-y-3">
+                    <h3 class="font-black text-base uppercase flex items-center gap-2">
+                        🔍 Evaluasi Detail Per Item (10 Soal SOP)
+                    </h3>
+                    <div id="itemizedFeedbackList" class="space-y-3">
+                        <!-- Injected dynamically -->
+                    </div>
+                </div>
+
+                <!-- Debrief Action Buttons -->
+                <div class="flex flex-wrap gap-4 pt-4 border-t-2 border-black">
+                    <button onclick="retryGame()" class="neo-btn bg-[#FFE600] hover:bg-[#ebd000] px-6 py-3.5 rounded-xl font-black text-sm uppercase flex-1">
+                        🔄 Coba Lagi / Perbaiki Skor
+                    </button>
+                    <button onclick="copyReport()" class="neo-btn bg-[#00F5D4] hover:bg-[#00d6b9] px-6 py-3.5 rounded-xl font-black text-sm uppercase flex-1">
+                        📋 Salin Laporan Hasil
+                    </button>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Custom Neo-Brutalism Modal UI for Notifications -->
+    <div id="customModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
+        <div class="neo-box bg-white max-w-md w-full p-6 rounded-2xl space-y-4 shadow-2xl">
+            <h3 id="modalTitle" class="font-black text-lg uppercase flex items-center gap-2">
+                📢 PEMBERITAHUAN
+            </h3>
+            <p id="modalBody" class="font-bold text-sm leading-relaxed whitespace-pre-line text-gray-800">
+                <!-- Modal Message -->
+            </p>
+            <div class="text-right pt-2">
+                <button onclick="closeModal()" class="neo-btn bg-[#FFE600] font-black px-6 py-2 rounded-xl text-sm uppercase">
+                    TUTUP
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="max-w-5xl mx-auto w-full mt-6 text-center">
+        <div class="neo-box bg-white p-3 rounded-xl font-black text-xs sm:text-sm uppercase tracking-wider">
+            Education & Training Dept. © 2026
+        </div>
+    </footer>
+
+
+    <!-- ==================== JAVASCRIPT LOGIC ==================== -->
+    <script>
+        // Game State Management
+        let playerName = "";
+        let playerPhone = "";
+        let score = 0;
+        let selectedPillText = null;
+        let selectedPillElem = null;
+        let isAudioMuted = false;
+        let audioCtx = null;
+        let bgmInterval = null;
+
+        // Correct Answers Mapping
+        const correctAnswers = {
+            1: "Microwave",
+            2: "800 watt",
+            3: "1 menit 40 detik",
+            4: "2 menit 40 detik",
+            5: "8 bagian",
+            6: "cup icip-icip",
+            7: "Salam pembuka",
+            8: "mohon maaf mengganggu waktunya",
+            9: "kenalkan & tawarkan produk serta variannya",
+            10: "tawarkan tester/icip-icip"
+        };
+
+        // SOP Explanations for Debrief
+        const sopExplanations = {
+            1: "Pemanasan Nasi Serbu x Mice wajib menggunakan Microwave sesuai standar peralatan RTE.",
+            2: "Daya microwave diatur tepat pada 800 watt agar tingkat kematangan nasi dan lauk sempurna.",
+            3: "Durasi pemanasan 1 pcs kemasan adalah 1 menit 40 detik.",
+            4: "Apabila memanaskan 2 pcs sekaligus, durasi disesuaikan menjadi 2 menit 40 detik.",
+            5: "1 porsi Nasi Serbu untuk tester/icip-icip dibagi tepat menjadi 8 bagian sama rata.",
+            6: "Potongan tester dimasukkan ke dalam cup icip-icip yang higienis.",
+            7: "Langkah pertama penawaran kasir dimulai dengan 'Salam pembuka'.",
+            8: "Langkah kedua: Menyampaikan kalimat santun 'mohon maaf mengganggu waktunya'.",
+            9: "Langkah ketiga: Mengenalkan & menawarkan produk Nasi Serbu beserta variannya.",
+            10: "Langkah keempat: Menawarkan tester/icip-icip kepada pelanggan."
+        };
+
+        // Word Bank Items (Correct 10 + Distractors 8)
+        const allWords = [
+            "Microwave", "800 watt", "1 menit 40 detik", "2 menit 40 detik", 
+            "8 bagian", "cup icip-icip", "Salam pembuka", "mohon maaf mengganggu waktunya", 
+            "kenalkan & tawarkan produk serta variannya", "tawarkan tester/icip-icip",
+            // Distractors
+            "oven", "2 menit", "1 menit", "papper bag", "4 bagian",
+            "informasi promo yang sedang berlangsung", "arahkan pelanggan untuk transaksi di kasir", "ucapkan terimakasi"
+        ];
+
+        // Badges Definition
+        const badgesConfig = [
+            { id: "quick_start", icon: "⚡", name: "Quick Starter", desc: "Mengisi 3 slot pertama", unlocked: false },
+            { id: "heating_master", icon: "🔥", name: "Pemanas Handal", desc: "Menjawab benar SOP Pemanasan (Slot 1-4)", unlocked: false },
+            { id: "tester_master", icon: "🍧", name: "Master Tester", desc: "Menjawab benar SOP Tester (Slot 5-6)", unlocked: false },
+            { id: "sales_champ", icon: "🗣️", name: "Sales Champion", desc: "Menjawab benar SOP Penawaran (Slot 7-10)", unlocked: false },
+            { id: "sop_superstar", icon: "🏆", name: "SOP Superstar", desc: "Meraih Skor Sempurna 100%", unlocked: false }
+        ];
+
+        // Web Audio API Procedural Sound Engine
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playSound(type) {
+            if (isAudioMuted) return;
+            initAudio();
+            
+            const now = audioCtx.currentTime;
+
+            if (type === 'click') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.exponentialRampToValueAtTime(400, now + 0.05);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.05);
+            } 
+            else if (type === 'correct') {
+                [523.25, 659.25, 783.99].forEach((freq, idx) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.06);
+                    gain.gain.setValueAtTime(0.2, now + idx * 0.06);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.06 + 0.12);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now + idx * 0.06);
+                    osc.stop(now + idx * 0.06 + 0.12);
+                });
+            } 
+            else if (type === 'error') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(160, now);
+                osc.frequency.linearRampToValueAtTime(110, now + 0.2);
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            } 
+            else if (type === 'badge') {
+                [523.25, 659.25, 783.99, 1046.50].forEach((freq) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.4);
+                });
+            }
+        }
+
+        // Procedural 8-bit Gen-Z Synth BGM Loop
+        function startBGM() {
+            if (bgmInterval) clearInterval(bgmInterval);
+            
+            const notes = [261.63, 329.63, 392.00, 440.00, 523.25, 440.00, 392.00, 329.63];
+            let step = 0;
+
+            bgmInterval = setInterval(() => {
+                if (isAudioMuted || !audioCtx) return;
+                
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(notes[step % notes.length], now);
+                
+                gain.gain.setValueAtTime(0.02, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.start(now);
+                osc.stop(now + 0.15);
+                
+                step++;
+            }, 220); // ~136 BPM
+        }
+
+        function toggleAudio() {
+            isAudioMuted = !isAudioMuted;
+            const btn = document.getElementById('bgmToggleBtn');
+            const icon = document.getElementById('bgmIcon');
+            const text = document.getElementById('bgmText');
+            const wave = document.getElementById('soundWave');
+
+            if (isAudioMuted) {
+                btn.classList.add('muted');
+                btn.classList.replace('bg-[#FFE600]', 'bg-gray-300');
+                icon.innerText = "🔇";
+                text.innerText = "BGM: OFF";
+                wave.style.opacity = "0.3";
+            } else {
+                btn.classList.remove('muted');
+                btn.classList.replace('bg-gray-300', 'bg-[#FFE600]');
+                icon.innerText = "🎵";
+                text.innerText = "BGM: ON";
+                wave.style.opacity = "1";
+                initAudio();
+                playSound('click');
+            }
+        }
+
+        // Custom Modal UI logic (replaces browser alert)
+        function showModal(title, message) {
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalBody').innerText = message;
+            document.getElementById('customModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            playSound('click');
+            document.getElementById('customModal').classList.add('hidden');
+        }
+
+        function startMission() {
+            const nameInput = document.getElementById('playerNameInput').value.trim();
+            const phoneInput = document.getElementById('playerPhoneInput').value.trim();
+            const errorMsg = document.getElementById('formErrorMsg');
+
+            if (!nameInput || !phoneInput) {
+                errorMsg.classList.remove('hidden');
+                playSound('error');
+                return;
+            }
+
+            errorMsg.classList.add('hidden');
+            playerName = nameInput;
+            playerPhone = phoneInput;
+
+            document.getElementById('hudPlayerName').innerText = playerName;
+            document.getElementById('hudPlayerPhone').innerText = playerPhone;
+
+            // Switch Screen
+            document.getElementById('gatewayScreen').classList.add('hidden');
+            document.getElementById('gameplayScreen').classList.remove('hidden');
+
+            initAudio();
+            startBGM();
+            playSound('click');
+            setupWordBank();
+            setupDropSlots();
+            updateHUD();
+        }
+
+        // Shuffle Array
+        function shuffle(array) {
+            return array.sort(() => Math.random() - 0.5);
+        }
+
+        // Render Word Bank
+        function setupWordBank() {
+            const container = document.getElementById('wordBankContainer');
+            container.innerHTML = "";
+            const shuffled = shuffle([...allWords]);
+
+            shuffled.forEach(word => {
+                const pill = document.createElement('div');
+                pill.className = 'word-pill';
+                pill.innerText = word;
+                pill.setAttribute('draggable', 'true');
+                pill.dataset.word = word;
+
+                // Drag Events
+                pill.addEventListener('dragstart', handleDragStart);
+
+                // Tap / Click Event for Mobile & Desktop
+                pill.addEventListener('click', () => handlePillTap(pill, word));
+
+                container.appendChild(pill);
+            });
+        }
+
+        function handlePillTap(pillElem, word) {
+            if (pillElem.classList.contains('used')) return;
+
+            playSound('click');
+
+            // Toggle selection state
+            if (selectedPillElem === pillElem) {
+                // Deselect
+                selectedPillElem.classList.remove('selected-pill');
+                selectedPillElem = null;
+                selectedPillText = null;
+                clearSlotHighlights();
+            } else {
+                if (selectedPillElem) {
+                    selectedPillElem.classList.remove('selected-pill');
+                }
+                selectedPillElem = pillElem;
+                selectedPillText = word;
+                selectedPillElem.classList.add('selected-pill');
+                highlightEmptySlots();
+            }
+        }
+
+        function highlightEmptySlots() {
+            document.querySelectorAll('.drop-slot').forEach(slot => {
+                if (!slot.dataset.filledWord) {
+                    slot.classList.add('selected-target');
+                }
+            });
+        }
+
+        function clearSlotHighlights() {
+            document.querySelectorAll('.drop-slot').forEach(slot => {
+                slot.classList.remove('selected-target');
+            });
+        }
+
+        function setupDropSlots() {
+            const slots = document.querySelectorAll('.drop-slot');
+            slots.forEach(slot => {
+                slot.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    slot.classList.add('drag-over');
+                });
+
+                slot.addEventListener('dragleave', () => {
+                    slot.classList.remove('drag-over');
+                });
+
+                slot.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    slot.classList.remove('drag-over');
+                    const word = e.dataTransfer.getData('text/plain');
+                    if (word) {
+                        fillSlot(slot, word);
+                    }
+                });
+
+                slot.addEventListener('click', () => {
+                    if (selectedPillText) {
+                        fillSlot(slot, selectedPillText);
+                    } else if (slot.dataset.filledWord) {
+                        unfillSlot(slot);
+                    }
+                });
+            });
+        }
+
+        function handleDragStart(e) {
+            e.dataTransfer.setData('text/plain', e.target.dataset.word);
+            playSound('click');
+        }
+
+        function fillSlot(slot, word) {
+            if (slot.dataset.filledWord) {
+                releasePill(slot.dataset.filledWord);
+            }
+
+            slot.dataset.filledWord = word;
+            slot.classList.add('filled');
+            slot.classList.remove('selected-target');
+            slot.innerHTML = `<span>${word}</span> <button onclick="event.stopPropagation(); unfillSlotByWord('${word}', ${slot.dataset.slot})" class="ml-1 text-red-600 font-black hover:text-black">✕</button>`;
+
+            markPillAsUsed(word);
+
+            if (selectedPillElem) {
+                selectedPillElem.classList.remove('selected-pill');
+                selectedPillElem = null;
+                selectedPillText = null;
+            }
+            clearSlotHighlights();
+
+            playSound('correct');
+            updateHUD();
+        }
+
+        function unfillSlot(slot) {
+            const word = slot.dataset.filledWord;
+            if (!word) return;
+
+            delete slot.dataset.filledWord;
+            slot.classList.remove('filled');
+            slot.innerText = `${slot.dataset.slot}. [ Drop / Tap ]`;
+
+            releasePill(word);
+            playSound('click');
+            updateHUD();
+        }
+
+        function unfillSlotByWord(word, slotId) {
+            const slot = document.querySelector(`.drop-slot[data-slot="${slotId}"]`);
+            if (slot) {
+                unfillSlot(slot);
+            }
+        }
+
+        function markPillAsUsed(word) {
+            document.querySelectorAll('.word-pill').forEach(p => {
+                if (p.dataset.word === word) {
+                    p.classList.add('used');
+                }
+            });
+        }
+
+        function releasePill(word) {
+            document.querySelectorAll('.word-pill').forEach(p => {
+                if (p.dataset.word === word) {
+                    p.classList.remove('used');
+                }
+            });
+        }
+
+        function resetAllSlots() {
+            playSound('click');
+            document.querySelectorAll('.drop-slot').forEach(slot => {
+                if (slot.dataset.filledWord) {
+                    unfillSlot(slot);
+                }
+            });
+        }
+
+        function updateHUD() {
+            let filledCount = 0;
+            const slots = document.querySelectorAll('.drop-slot');
+
+            slots.forEach(slot => {
+                if (slot.dataset.filledWord) filledCount++;
+            });
+
+            const percent = Math.round((filledCount / 10) * 100);
+            document.getElementById('progressPercent').innerText = `${percent}%`;
+            document.getElementById('progressBarFill').style.width = `${percent}%`;
+
+            checkBadges(filledCount);
+        }
+
+        function checkBadges(filledCount) {
+            let newUnlock = false;
+
+            if (filledCount >= 3 && !badgesConfig[0].unlocked) {
+                badgesConfig[0].unlocked = true;
+                newUnlock = true;
+            }
+
+            const s1 = getSlotWord(1) === correctAnswers[1];
+            const s2 = getSlotWord(2) === correctAnswers[2];
+            const s3 = getSlotWord(3) === correctAnswers[3];
+            const s4 = getSlotWord(4) === correctAnswers[4];
+            if (s1 && s2 && s3 && s4 && !badgesConfig[1].unlocked) {
+                badgesConfig[1].unlocked = true;
+                newUnlock = true;
+            }
+
+            const s5 = getSlotWord(5) === correctAnswers[5];
+            const s6 = getSlotWord(6) === correctAnswers[6];
+            if (s5 && s6 && !badgesConfig[2].unlocked) {
+                badgesConfig[2].unlocked = true;
+                newUnlock = true;
+            }
+
+            const s7 = getSlotWord(7) === correctAnswers[7];
+            const s8 = getSlotWord(8) === correctAnswers[8];
+            const s9 = getSlotWord(9) === correctAnswers[9];
+            const s10 = getSlotWord(10) === correctAnswers[10];
+            if (s7 && s8 && s9 && s10 && !badgesConfig[3].unlocked) {
+                badgesConfig[3].unlocked = true;
+                newUnlock = true;
+            }
+
+            if (newUnlock) {
+                playSound('badge');
+                renderBadgesRibbon();
+            }
+        }
+
+        function getSlotWord(slotId) {
+            const slot = document.querySelector(`.drop-slot[data-slot="${slotId}"]`);
+            return slot ? slot.dataset.filledWord : null;
+        }
+
+        function renderBadgesRibbon() {
+            const container = document.getElementById('badgesContainer');
+            container.innerHTML = "";
+
+            badgesConfig.forEach(b => {
+                if (b.unlocked) {
+                    const badgeElem = document.createElement('span');
+                    badgeElem.className = "neo-box bg-[#FFE600] px-2 py-0.5 rounded text-xs font-black flex items-center gap-1 whitespace-nowrap animate-bounce";
+                    badgeElem.innerHTML = `${b.icon} ${b.name}`;
+                    container.appendChild(badgeElem);
+                }
+            });
+        }
+
+        function showHint() {
+            playSound('click');
+            
+            let targetSlot = null;
+            for (let i = 1; i <= 10; i++) {
+                if (getSlotWord(i) !== correctAnswers[i]) {
+                    targetSlot = i;
+                    break;
+                }
+            }
+
+            if (targetSlot) {
+                showModal("💡 HINT BANTUAN", `Slot Nomor ${targetSlot} membutuhkan jawaban berhubungan dengan SOP:\n"${correctAnswers[targetSlot]}".`);
+            } else {
+                showModal("🎉 SEMUA BENAR!", "Semua slot sudah diisi dengan benar! Kamu siap mengirim jawaban!");
+            }
+        }
+
+        function submitAnswers() {
+            let correctCount = 0;
+            const itemizedResults = [];
+
+            for (let i = 1; i <= 10; i++) {
+                const userVal = getSlotWord(i);
+                const expected = correctAnswers[i];
+                const isCorrect = userVal === expected;
+
+                if (isCorrect) correctCount++;
+
+                itemizedResults.push({
+                    slotNum: i,
+                    userVal: userVal || "(Belum Diisi)",
+                    expected: expected,
+                    isCorrect: isCorrect,
+                    explanation: sopExplanations[i]
+                });
+            }
+
+            score = correctCount * 10;
+
+            if (score === 100 && !badgesConfig[4].unlocked) {
+                badgesConfig[4].unlocked = true;
+            }
+
+            playSound(score >= 80 ? 'badge' : 'error');
+            renderDebriefScreen(score, correctCount, itemizedResults);
+        }
+
+        function renderDebriefScreen(scoreVal, correctCount, results) {
+            document.getElementById('gameplayScreen').classList.add('hidden');
+            document.getElementById('debriefScreen').classList.remove('hidden');
+
+            const isPassed = scoreVal >= 80;
+
+            const headerCard = document.getElementById('resultHeaderCard');
+            const resultBadge = document.getElementById('resultBadge');
+            const resultTitle = document.getElementById('resultTitle');
+            const resultSubtitle = document.getElementById('resultSubtitle');
+
+            if (isPassed) {
+                headerCard.className = "neo-box bg-[#00F5D4] p-6 rounded-2xl text-center space-y-3";
+                resultBadge.className = "inline-block neo-box bg-[#FFE600] px-4 py-1 font-black text-xs sm:text-sm uppercase rounded-full";
+                resultBadge.innerText = "MISSION PASSED 🏆";
+                resultTitle.innerText = "SELAMAT! KAMU MASTER CREW RTE!";
+                resultSubtitle.innerText = "Kamu telah menguasai SOP Pengolahan & Penawaran Yummy Choice Nasi Serbu x Mice secara akurat.";
+            } else {
+                headerCard.className = "neo-box bg-[#FF007F] text-white p-6 rounded-2xl text-center space-y-3";
+                resultBadge.className = "inline-block neo-box bg-black text-white px-4 py-1 font-black text-xs sm:text-sm uppercase rounded-full";
+                resultBadge.innerText = "NEEDS REVIEW ⚠️";
+                resultTitle.innerText = "BELUM MENCAPAI TARGET MINIMAL!";
+                resultSubtitle.innerText = "Target kelulusan adalah 80%. Yuk pelajari kembali poin SOP yang belum tepat di bawah!";
+            }
+
+            document.getElementById('finalScoreVal').innerText = scoreVal;
+            document.getElementById('accuracyText').innerText = `Akurasi: ${(scoreVal)}%`;
+            document.getElementById('passStatusVal').innerText = isPassed ? "LULUS ✅" : "REMEDIAL ❌";
+
+            const unlockedCount = badgesConfig.filter(b => b.unlocked).length;
+            document.getElementById('finalBadgeCount').innerText = unlockedCount;
+
+            const reinfText = document.getElementById('reinforcementText');
+            if (scoreVal === 100) {
+                reinfText.innerText = "🌟 Luar biasa sempurna! Kamu memiliki ketelitian tingkat tinggi dan siap menjadi role model operasional toko!";
+            } else if (isPassed) {
+                reinfText.innerText = "👍 Kerja bagus! Kamu sudah memahami inti SOP Nasi Serbu x Mice dengan baik. Tingkatkan lagi hingga 100%!";
+            } else {
+                reinfText.innerText = "💪 Jangan berkecil hati! Pelajari catatan perbaikan di bawah dan coba sekali lagi untuk mendapatkan sertifikasi Master Crew!";
+            }
+
+            const gallery = document.getElementById('finalBadgesGallery');
+            gallery.innerHTML = "";
+            badgesConfig.forEach(b => {
+                const card = document.createElement('div');
+                card.className = b.unlocked 
+                    ? "neo-box bg-[#FFE600] p-3 rounded-xl flex items-center gap-3"
+                    : "neo-box bg-gray-200 opacity-50 p-3 rounded-xl flex items-center gap-3 grayscale";
+                card.innerHTML = `
+                    <span class="text-3xl">${b.icon}</span>
+                    <div>
+                        <div class="font-black text-xs sm:text-sm uppercase">${b.name}</div>
+                        <div class="text-xs font-bold">${b.unlocked ? b.desc : "Belum Terbuka"}</div>
+                    </div>
+                `;
+                gallery.appendChild(card);
+            });
+
+            const feedbackContainer = document.getElementById('itemizedFeedbackList');
+            feedbackContainer.innerHTML = "";
+
+            results.forEach(res => {
+                const item = document.createElement('div');
+                item.className = res.isCorrect
+                    ? "neo-box bg-green-100 border-l-8 border-l-green-500 p-4 rounded-xl space-y-1"
+                    : "neo-box bg-red-100 border-l-8 border-l-red-500 p-4 rounded-xl space-y-1";
+
+                item.innerHTML = `
+                    <div class="flex justify-between items-center font-black text-xs sm:text-sm uppercase">
+                        <span>Slot #${res.slotNum}</span>
+                        <span>${res.isCorrect ? "✅ BENAR" : "❌ SALAH"}</span>
+                    </div>
+                    <div class="text-xs sm:text-sm font-bold">
+                        <b>Jawaban Kamu:</b> <span class="${res.isCorrect ? "text-green-700" : "text-red-700"}">${res.userVal}</span>
+                    </div>
+                    ${!res.isCorrect ? `<div class="text-xs sm:text-sm font-bold text-gray-800"><b>Jawaban Seharusnya:</b> <span class="bg-yellow-200 px-1 rounded">${res.expected}</span></div>` : ""}
+                    <div class="text-xs font-semibold text-gray-700 pt-1 border-t border-black/20">
+                        💡 <i>SOP Note:</i> ${res.explanation}
+                    </div>
+                `;
+                feedbackContainer.appendChild(item);
+            });
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function retryGame() {
+            playSound('click');
+            badgesConfig.forEach(b => b.unlocked = false);
+            
+            document.getElementById('debriefScreen').classList.add('hidden');
+            document.getElementById('gameplayScreen').classList.remove('hidden');
+
+            setupWordBank();
+            resetAllSlots();
+            updateHUD();
+        }
+
+        function copyReport() {
+            playSound('click');
+            const reportText = `=== LAPORAN GAMIFIKASI LMS RTE 2026 ===\n` +
+                `Nama: ${playerName}\n` +
+                `No HP: ${playerPhone}\n` +
+                `Modul: SOP Yummy Choice RTE Nasi Serbu x Mice\n` +
+                `Skor Akhir: ${score}/100\n` +
+                `Status: ${score >= 80 ? "LULUS" : "REMEDIAL"}\n` +
+                `Education & Training Dept. © 2026`;
+
+            const tempInput = document.createElement("textarea");
+            tempInput.value = reportText;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand("copy");
+            document.body.removeChild(tempInput);
+
+            showModal("📋 LAPORAN DISALIN", "Laporan hasil gamifikasi telah berhasil disalin ke clipboard!");
+        }
+    </script>
+</body>
+</html>
